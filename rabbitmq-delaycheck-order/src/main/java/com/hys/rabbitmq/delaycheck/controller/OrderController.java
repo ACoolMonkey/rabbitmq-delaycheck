@@ -1,6 +1,6 @@
 package com.hys.rabbitmq.delaycheck.controller;
 
-import com.hys.rabbitmq.delaycheck.model.MsgTxt;
+import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import com.hys.rabbitmq.delaycheck.model.OrderInfo;
 import com.hys.rabbitmq.delaycheck.mq.MsgSender;
 import com.hys.rabbitmq.delaycheck.service.OrderService;
@@ -53,14 +53,14 @@ public class OrderController {
      * @return
      */
     @RequestMapping("retryMsg")
-    public String retryMsg(@RequestBody MsgTxt msgTxt) {
+    public String retryMsg(@RequestBody MessageContent messageContent) {
         if (log.isDebugEnabled()) {
-            log.debug("消息重新发送,msgTxt：" + msgTxt);
+            log.debug("消息重新发送,messageContent：" + messageContent);
         }
         //初始发送消息
-        msgSender.sendMsg(msgTxt);
+        msgSender.sendMsg(messageContent);
         //发送延时消息
-        msgSender.sendDelayCheckMsg(msgTxt);
+        msgSender.sendDelayCheckMsg(messageContent);
 
         return "ok";
     }

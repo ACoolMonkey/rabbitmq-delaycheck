@@ -18,21 +18,17 @@ public enum MsgStatusEnum {
      */
     SENDING(0, "发送中"),
     /**
-     * 消息发送成功
-     */
-    SENDING_SUCCESS(1, "消息发送成功"),
-    /**
-     * 消息发送失败
-     */
-    SENDING_FAIL(2, "消息发送失败"),
-    /**
      * 消费成功
      */
-    CONSUMER_SUCCESS(3, "消费成功"),
+    CONSUMER_SUCCESS(1, "消费成功"),
+    /**
+     * 消费重试中
+     */
+    CONSUMER_RETRYING(2, "消费重试中"),
     /**
      * 消费失败
      */
-    CONSUMER_FAIL(4, "消费失败");
+    CONSUMER_FAIL(3, "消费失败");
     /**
      * 码值
      */

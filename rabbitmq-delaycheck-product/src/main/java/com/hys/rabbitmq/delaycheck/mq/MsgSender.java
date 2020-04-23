@@ -2,7 +2,7 @@ package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
-import com.hys.rabbitmq.delaycheck.model.MsgTxt;
+import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -25,13 +25,13 @@ public class MsgSender {
     /**
      * 发送消息
      *
-     * @param msgTxt 消息
+     * @param messageContent 消息
      */
-    public void sendMsg(MsgTxt msgTxt) {
+    public void sendMsg(MessageContent messageContent) {
         if (log.isDebugEnabled()) {
-            log.debug("发送消息id：" + msgTxt.getMsgId());
+            log.debug("发送消息id：" + messageContent.getMsgId());
         }
-        CorrelationData correlationData = new CorrelationData(msgTxt.getMsgId() + "_" + msgTxt.getOrderNo());
-        rabbitTemplate.convertAndSend(MsgConstant.ORDER_TO_PRODUCT_EXCHANGE_NAME, MsgConstant.PRODUCT_TO_CALLBACK_ROUTING_KEY, JSON.toJSON(msgTxt), correlationData);
+        CorrelationData correlationData = new CorrelationData(messageContent.getMsgId() + "_" + messageContent.getOrderNo());
+        rabbitTemplate.convertAndSend(MsgConstant.ORDER_TO_PRODUCT_EXCHANGE_NAME, MsgConstant.PRODUCT_TO_CALLBACK_ROUTING_KEY, JSON.toJSON(messageContent), correlationData);
     }
 }

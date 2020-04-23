@@ -2,9 +2,8 @@ package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
-import com.hys.rabbitmq.delaycheck.model.MsgTxt;
+import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import com.hys.rabbitmq.delaycheck.model.ProductInfo;
 import com.hys.rabbitmq.delaycheck.service.ProductService;
 import com.rabbitmq.client.Channel;
@@ -50,27 +49,29 @@ public class MsgConsumer {
     @RabbitHandler
     @RabbitListener(queues = {MsgConstant.ORDER_TO_PRODUCT_QUEUE_NAME})
     public void consumerMsgWithLock(@Payload JSONObject object, Message message, Channel channel) throws IOException {
-        MsgTxt msgTxt = JSON.toJavaObject(object, MsgTxt.class);
+        MessageContent messageContent = JSON.toJavaObject(object, MessageContent.class);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         //分布式锁
         RLock lock = redisson.getLock(MsgConstant.LOCK_KEY);
         try {
             if (lock.tryLock()) {
                 if (log.isDebugEnabled()) {
-                    log.debug("消费消息，msgTxt：" + msgTxt);
+                    log.debug("消费消息，messageContent：" + messageContent);
                 }
-                //产品库存-1
-                ProductInfo productInfo = productService.getById(msgTxt.getProductNo());
-                if (productInfo.getProductNum() > 0) {
-                    productInfo.setProductNum(productInfo.getProductNum() - 1);
-                    productService.updateById(productInfo);
+                if (messageContent.getRetry() == null || !messageContent.getRetry()) {
+                    //产品库存-1
+                    ProductInfo productInfo = productService.getById(messageContent.getProductNo());
+                    if (productInfo.getProductNum() > 0) {
+                        productInfo.setProductNum(productInfo.getProductNum() - 1);
+                        productService.updateById(productInfo);
+                    }
                 }
                 //发送一条确认消息到callback服务上
-                msgSender.sendMsg(msgTxt);
+                msgSender.sendMsg(messageContent);
                 //消息签收
                 channel.basicAck(deliveryTag, false);
             } else {
-                log.warn("请不要重复消费消息！msgTxt：" + msgTxt);
+                log.warn("请不要重复消费消息！messageContent：" + messageContent);
                 channel.basicReject(deliveryTag, false);
             }
         } finally {

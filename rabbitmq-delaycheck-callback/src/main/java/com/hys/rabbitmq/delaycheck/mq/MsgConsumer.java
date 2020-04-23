@@ -2,11 +2,10 @@ package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
 import com.hys.rabbitmq.delaycheck.enumration.MsgStatusEnum;
+import com.hys.rabbitmq.delaycheck.mapstruct.MessageMapper;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
-import com.hys.rabbitmq.delaycheck.model.MsgTxt;
 import com.hys.rabbitmq.delaycheck.service.MsgContentService;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +34,10 @@ public class MsgConsumer {
 
     @Autowired
     private MsgContentService msgContentService;
-
     @Autowired
     private Redisson redisson;
+    @Autowired
+    private MessageMapper messageMapper;
 
     /**
      * 监听消息
@@ -50,37 +50,29 @@ public class MsgConsumer {
     @RabbitHandler
     @RabbitListener(queues = {MsgConstant.PRODUCT_TO_CALLBACK_QUEUE_NAME})
     public void consumerConfirmMsg(@Payload JSONObject object, Message message, Channel channel) throws IOException {
-        MsgTxt msgTxt = JSON.toJavaObject(object, MsgTxt.class);
+        MessageContent mc = JSON.toJavaObject(object, MessageContent.class);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         //分布式锁
         RLock lock = redisson.getLock(MsgConstant.LOCK_CALLBACK_KEY);
         try {
             if (lock.tryLock()) {
                 if (log.isDebugEnabled()) {
-                    log.debug("消费消息，msgTxt：" + msgTxt);
+                    log.debug("消费消息，messageContent：" + mc);
                 }
-                //TODO:MapStruct
-                MessageContent messageContent = new MessageContent();
-                messageContent.setMsgId(msgTxt.getMsgId());
-                messageContent.setOrderNo(msgTxt.getOrderNo());
-                messageContent.setProductNo(msgTxt.getProductNo());
-                messageContent.setMsgStatus(MsgStatusEnum.CONSUMER_SUCCESS.getCode());
-                messageContent.setExchange(message.getMessageProperties().getReceivedExchange());
-                messageContent.setRoutingKey(message.getMessageProperties().getReceivedRoutingKey());
-                messageContent.setErrCause("");
-                messageContent.setMaxRetry(MsgConstant.MAX_RETRY_COUNT);
-                messageContent.setCurrentRetry(-1);
-                Date date = new Date();
-                messageContent.setCreateTime(date);
-                messageContent.setUpdateTime(date);
+                MessageContent messageContent = messageMapper.messageMapper(mc, message);
                 //插入消息
                 msgContentService.save(messageContent);
                 //消息签收
                 channel.basicAck(deliveryTag, false);
             } else {
-                log.warn("请不要重复消费消息！msgTxt：" + msgTxt);
+                log.warn("请不要重复消费消息！messageContent：" + mc);
                 channel.basicReject(deliveryTag, false);
             }
+        } catch (Exception e) {
+            //更新消息表状态为消费失败
+            MessageContent messageContent = messageMapper.failMessageMapper(mc, message, e);
+            msgContentService.saveOrUpdate(messageContent);
+            channel.basicReject(deliveryTag, false);
         } finally {
             lock.unlock();
         }
@@ -97,15 +89,28 @@ public class MsgConsumer {
     @RabbitHandler
     @RabbitListener(queues = {MsgConstant.ORDER_TO_PRODUCT_DELAY_QUEUE_NAME})
     public void consumerCheckMsg(@Payload JSONObject object, Message message, Channel channel) throws IOException {
-        MsgTxt msgTxt = JSON.toJavaObject(object, MsgTxt.class);
+        MessageContent mc = JSON.toJavaObject(object, MessageContent.class);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
 
-        String msgId = msgTxt.getMsgId().replace("_delay", "");
-        MessageContent messageContent = msgContentService.getById(msgId);
-        if (messageContent == null) {
-            //消费者没有发送确认消息，需要回调生产者重新发送消息
+        MessageContent messageContent = msgContentService.getById(mc.getMsgId());
+        if (messageContent == null || !messageContent.getMsgStatus().equals(MsgStatusEnum.CONSUMER_SUCCESS.getCode())) {
+            //消费者没有发送确认消息、或者监听执行过程中失败，需要回调生产者重新发送消息
+            Integer maxRetry = mc.getMaxRetry() == null ? MsgConstant.MAX_RETRY_COUNT : mc.getMaxRetry();
+            int nextRetry = mc.getCurrentRetry() == null ? 1 : mc.getCurrentRetry() + 1;
+            if (nextRetry >= maxRetry) {
+                log.error("重试次数超过最大次数!messageContent：" + mc);
+                mc.setMsgStatus(MsgStatusEnum.CONSUMER_FAIL.getCode());
+                mc.setErrCause("重试次数超过最大次数!");
+                mc.setCurrentRetry(nextRetry);
+                mc.setUpdateTime(new Date());
+                msgContentService.updateById(mc);
+                channel.basicReject(deliveryTag, false);
+                return;
+            }
+            mc = messageMapper.retryMessageMapper(mc, message, maxRetry, nextRetry);
+            msgContentService.saveOrUpdate(mc);
             RestTemplate restTemplate = new RestTemplate();
-            restTemplate.postForEntity("http://localhost:8080/retryMsg", msgTxt, String.class);
+            restTemplate.postForEntity("http://localhost:8080/retryMsg", mc, String.class);
         }
         //消息签收
         channel.basicAck(deliveryTag, false);

@@ -1,5 +1,6 @@
 package com.hys.rabbitmq.delaycheck.model;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -65,4 +66,9 @@ public class MessageContent implements Serializable {
      * 修改时间
      */
     private Date updateTime;
+    /**
+     * 当前是否是重试状态
+     */
+    @TableField(exist = false)
+    private Boolean retry;
 }
