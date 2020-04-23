@@ -14,7 +14,7 @@ public class MsgConstant {
     /**
      * 延时发送时间（单位：秒）
      */
-    public static final Integer DELAY_TIME = 10000;
+    public static final Integer DELAY_TIME = 30000;
 
     public static final String ORDER_TO_PRODUCT_EXCHANGE_NAME = "order-to-product.exchange";
 
