@@ -6,11 +6,10 @@ import com.hys.rabbitmq.delaycheck.enumuration.OrderStatusEnum;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import com.hys.rabbitmq.delaycheck.model.OrderInfo;
 import com.hys.rabbitmq.delaycheck.service.OrderService;
-import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
-import org.springframework.amqp.rabbit.core.RabbitTemplate.ReturnCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
