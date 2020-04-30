@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.hys</groupId>
     <artifactId>rabbitmq-delaycheck-callback</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
     <name>rabbitmq-delaycheck-callback</name>
     <description>模拟回调服务</description>
 
