@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.hys.rabbitmq</groupId>
     <artifactId>rabbitmq-delaycheck-order</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <name>rabbitmq-delaycheck-order</name>
     <description>模拟订单服务</description>
 

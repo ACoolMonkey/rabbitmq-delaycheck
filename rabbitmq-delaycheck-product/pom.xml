@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.hys</groupId>
     <artifactId>rabbitmq-delaycheck-product</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <name>rabbitmq-delaycheck-product</name>
     <description>模拟库存服务</description>
 
