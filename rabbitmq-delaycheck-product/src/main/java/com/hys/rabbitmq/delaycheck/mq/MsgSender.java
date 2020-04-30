@@ -1,7 +1,7 @@
 package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
-import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
+import com.hys.rabbitmq.delaycheck.constant.MsgConstants;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
@@ -32,6 +32,6 @@ public class MsgSender {
             log.debug("发送消息id：" + messageContent.getMsgId());
         }
         CorrelationData correlationData = new CorrelationData(messageContent.getMsgId() + "_" + messageContent.getOrderNo());
-        rabbitTemplate.convertAndSend(MsgConstant.ORDER_TO_PRODUCT_EXCHANGE_NAME, MsgConstant.PRODUCT_TO_CALLBACK_ROUTING_KEY, JSON.toJSON(messageContent), correlationData);
+        rabbitTemplate.convertAndSend(MsgConstants.ORDER_TO_PRODUCT_EXCHANGE_NAME, MsgConstants.PRODUCT_TO_CALLBACK_ROUTING_KEY, JSON.toJSON(messageContent), correlationData);
     }
 }

@@ -1,7 +1,7 @@
 package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
-import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
+import com.hys.rabbitmq.delaycheck.constant.MsgConstants;
 import com.hys.rabbitmq.delaycheck.enumuration.OrderStatusEnum;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import com.hys.rabbitmq.delaycheck.model.OrderInfo;
@@ -50,7 +50,7 @@ public class MsgSender {
         }
         rabbitTemplate.setConfirmCallback(CONFIRM_CALLBACK);
         CorrelationData correlationData = new CorrelationData(messageContent.getMsgId() + "_" + messageContent.getOrderNo());
-        rabbitTemplate.convertAndSend(MsgConstant.ORDER_TO_PRODUCT_EXCHANGE_NAME, MsgConstant.ORDER_TO_PRODUCT_ROUTING_KEY, JSON.toJSON(messageContent), correlationData);
+        rabbitTemplate.convertAndSend(MsgConstants.ORDER_TO_PRODUCT_EXCHANGE_NAME, MsgConstants.ORDER_TO_PRODUCT_ROUTING_KEY, JSON.toJSON(messageContent), correlationData);
     }
 
     /**
@@ -64,9 +64,9 @@ public class MsgSender {
         }
         rabbitTemplate.setConfirmCallback(CONFIRM_CALLBACK);
         CorrelationData correlationData = new CorrelationData(messageContent.getMsgId() + "_" + messageContent.getOrderNo() + "_delay");
-        rabbitTemplate.convertAndSend(MsgConstant.ORDER_TO_PRODUCT_DELAY_EXCHANGE_NAME, MsgConstant.ORDER_TO_PRODUCT_DELAY_ROUTING_KEY, JSON.toJSON(messageContent), message -> {
+        rabbitTemplate.convertAndSend(MsgConstants.ORDER_TO_PRODUCT_DELAY_EXCHANGE_NAME, MsgConstants.ORDER_TO_PRODUCT_DELAY_ROUTING_KEY, JSON.toJSON(messageContent), message -> {
             //设置延时时间
-            message.getMessageProperties().setHeader("x-delay", MsgConstant.DELAY_TIME);
+            message.getMessageProperties().setHeader("x-delay", MsgConstants.DELAY_TIME);
             return message;
         }, correlationData);
     }

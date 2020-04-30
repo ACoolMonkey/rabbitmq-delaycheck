@@ -6,9 +6,9 @@ package com.hys.rabbitmq.delaycheck.constant;
  * @author Robert Hou
  * @date 2020年04月23日 15:58
  **/
-public class MsgConstant {
+public class MsgConstants {
 
-    private MsgConstant() {
+    private MsgConstants() {
     }
 
     /**

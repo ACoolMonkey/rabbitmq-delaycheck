@@ -2,7 +2,7 @@ package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
+import com.hys.rabbitmq.delaycheck.constant.MsgConstants;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import com.hys.rabbitmq.delaycheck.model.ProductInfo;
 import com.hys.rabbitmq.delaycheck.service.ProductService;
@@ -47,12 +47,12 @@ public class MsgConsumer {
      * @throws IOException IOException
      */
     @RabbitHandler
-    @RabbitListener(queues = {MsgConstant.ORDER_TO_PRODUCT_QUEUE_NAME})
+    @RabbitListener(queues = {MsgConstants.ORDER_TO_PRODUCT_QUEUE_NAME})
     public void consumerMsgWithLock(@Payload JSONObject object, Message message, Channel channel) throws IOException {
         MessageContent messageContent = JSON.toJavaObject(object, MessageContent.class);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         //分布式锁
-        RLock lock = redisson.getLock(MsgConstant.LOCK_KEY);
+        RLock lock = redisson.getLock(MsgConstants.LOCK_KEY);
         try {
             if (lock.tryLock()) {
                 if (log.isDebugEnabled()) {
