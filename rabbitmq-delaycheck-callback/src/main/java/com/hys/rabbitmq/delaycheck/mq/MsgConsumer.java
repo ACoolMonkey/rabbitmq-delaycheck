@@ -2,7 +2,7 @@ package com.hys.rabbitmq.delaycheck.mq;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
+import com.hys.rabbitmq.delaycheck.constant.MsgConstants;
 import com.hys.rabbitmq.delaycheck.enumration.MsgStatusEnum;
 import com.hys.rabbitmq.delaycheck.mapstruct.MessageMapper;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
@@ -48,12 +48,12 @@ public class MsgConsumer {
      * @throws IOException IOException
      */
     @RabbitHandler
-    @RabbitListener(queues = {MsgConstant.PRODUCT_TO_CALLBACK_QUEUE_NAME})
+    @RabbitListener(queues = {MsgConstants.PRODUCT_TO_CALLBACK_QUEUE_NAME})
     public void consumerConfirmMsg(@Payload JSONObject object, Message message, Channel channel) throws IOException {
         MessageContent mc = JSON.toJavaObject(object, MessageContent.class);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         //分布式锁
-        RLock lock = redisson.getLock(MsgConstant.LOCK_CALLBACK_KEY);
+        RLock lock = redisson.getLock(MsgConstants.LOCK_CALLBACK_KEY);
         try {
             if (lock.tryLock()) {
                 if (log.isDebugEnabled()) {
@@ -87,7 +87,7 @@ public class MsgConsumer {
      * @throws IOException IOException
      */
     @RabbitHandler
-    @RabbitListener(queues = {MsgConstant.ORDER_TO_PRODUCT_DELAY_QUEUE_NAME})
+    @RabbitListener(queues = {MsgConstants.ORDER_TO_PRODUCT_DELAY_QUEUE_NAME})
     public void consumerCheckMsg(@Payload JSONObject object, Message message, Channel channel) throws IOException {
         MessageContent mc = JSON.toJavaObject(object, MessageContent.class);
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
@@ -95,7 +95,7 @@ public class MsgConsumer {
         MessageContent messageContent = msgContentService.getById(mc.getMsgId());
         if (messageContent == null || !messageContent.getMsgStatus().equals(MsgStatusEnum.CONSUMER_SUCCESS.getCode())) {
             //消费者没有发送确认消息、或者监听执行过程中失败，需要回调生产者重新发送消息
-            Integer maxRetry = mc.getMaxRetry() == null ? MsgConstant.MAX_RETRY_COUNT : mc.getMaxRetry();
+            Integer maxRetry = mc.getMaxRetry() == null ? MsgConstants.MAX_RETRY_COUNT : mc.getMaxRetry();
             int nextRetry = mc.getCurrentRetry() == null ? 1 : mc.getCurrentRetry() + 1;
             if (nextRetry >= maxRetry) {
                 log.error("重试次数超过最大次数!messageContent：" + mc);

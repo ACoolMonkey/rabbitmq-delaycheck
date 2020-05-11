@@ -1,6 +1,6 @@
 package com.hys.rabbitmq.delaycheck.mapstruct;
 
-import com.hys.rabbitmq.delaycheck.constant.MsgConstant;
+import com.hys.rabbitmq.delaycheck.constant.MsgConstants;
 import com.hys.rabbitmq.delaycheck.enumration.MsgStatusEnum;
 import com.hys.rabbitmq.delaycheck.model.MessageContent;
 import org.mapstruct.Mapper;
@@ -16,7 +16,7 @@ import java.util.Date;
  * @author Robert Hou
  * @date 2020年04月24日 02:12
  **/
-@Mapper(componentModel = "spring", imports = {MsgStatusEnum.class, MsgConstant.class, Date.class})
+@Mapper(componentModel = "spring", imports = {MsgStatusEnum.class, MsgConstants.class, Date.class})
 public interface MessageMapper {
 
     /**
@@ -34,7 +34,7 @@ public interface MessageMapper {
             @Mapping(target = "exchange", expression = "java(message.getMessageProperties().getReceivedExchange())"),
             @Mapping(target = "routingKey", expression = "java(message.getMessageProperties().getReceivedRoutingKey())"),
             @Mapping(target = "errCause", constant = ""),
-            @Mapping(target = "maxRetry", expression = "java(MsgConstant.MAX_RETRY_COUNT)"),
+            @Mapping(target = "maxRetry", expression = "java(MsgConstants.MAX_RETRY_COUNT)"),
             @Mapping(target = "currentRetry", expression = "java(mc.getCurrentRetry() == null ? 0 : mc.getCurrentRetry())"),
             @Mapping(target = "createTime", expression = "java(new Date())"),
             @Mapping(target = "updateTime", expression = "java(new Date())"),
@@ -58,7 +58,7 @@ public interface MessageMapper {
             @Mapping(target = "exchange", expression = "java(message.getMessageProperties().getReceivedExchange())"),
             @Mapping(target = "routingKey", expression = "java(message.getMessageProperties().getReceivedRoutingKey())"),
             @Mapping(target = "errCause", expression = "java(e.getMessage())"),
-            @Mapping(target = "maxRetry", expression = "java(MsgConstant.MAX_RETRY_COUNT)"),
+            @Mapping(target = "maxRetry", expression = "java(MsgConstants.MAX_RETRY_COUNT)"),
             @Mapping(target = "currentRetry", expression = "java(mc.getCurrentRetry() == null ? 0 : mc.getCurrentRetry())"),
             @Mapping(target = "createTime", expression = "java(mc.getCreateTime() != null ? mc.getCreateTime() :new Date())"),
             @Mapping(target = "updateTime", expression = "java(new Date())"),
